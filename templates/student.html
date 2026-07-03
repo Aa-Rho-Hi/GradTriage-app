@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}{{ rec.personal.full_name or rec.cas_id }} — Grad App{% endblock %}
+{% block body %}
+
+<p class="back"><a href="{{ url_for('index') }}">← All applicants</a></p>
+
+<div class="card">
+  <h2 style="margin:0 0 4px">{{ rec.personal.full_name or rec.cas_id }}</h2>
+  <div class="muted">CAS ID {{ rec.cas_id }}{% if rec.personal.email %} · {{ rec.personal.email }}{% endif %}
+    {% if rec.interests %} · interest: {{ (rec.interests.specialization or rec.interests.areas or [])|join(', ') }}{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Sources on file</h3>
+  <div class="chips">
+    {% set srcs = unified.sources %}
+    <span class="chip {{ 's' if srcs.application else '' }}">Application (CSV){{ ' ✓' if srcs.application else ' —' }}</span>
+    <span class="chip {{ 's' if srcs.resume else '' }}">Resume{{ ' ✓' if srcs.resume else ' —' }}</span>
+    <span class="chip {{ 's' if srcs.sop else '' }}">SOP{{ ' ✓' if srcs.sop else ' —' }}</span>
+    <span class="chip {{ 's' if srcs.lors else '' }}">LORs ({{ srcs.lors|length }})</span>
+    {% if unified.ocr and unified.ocr.ocr_pages_read %}<span class="chip" style="background:#fdf3da;color:#8a6d00">📄 OCR · {{ unified.ocr.ocr_pages_read }} scanned page(s) read</span>{% endif %}
+  </div>
+  {% if unified.ocr and unified.ocr.ocr_pages_read %}
+    <p class="muted" style="margin-top:6px">This packet was partly scanned; {{ unified.ocr.ocr_pages_read }} page(s) were read with OCR (text may have minor recognition errors).</p>
+  {% endif %}
+  <form action="{{ url_for('upload_document') }}" method="post" enctype="multipart/form-data"
+        style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="cas_id" value="{{ rec.cas_id }}">
+    <strong style="font-size:13px">Add a document:</strong>
+    <select name="type" style="padding:6px;border:1px solid var(--line);border-radius:6px">
+      <option value="sop">SOP</option>
+      <option value="lor">Letter of rec</option>
+      <option value="resume">Resume</option>
+    </select>
+    <input type="text" name="recommender" placeholder="recommender (for LOR)"
+           style="padding:6px;border:1px solid var(--line);border-radius:6px;font-size:13px">
+    <input type="file" name="doc" accept=".pdf,.docx,.txt,.md" style="font-size:13px">
+    <button type="submit">Attach</button>
+  </form>
+  <p class="muted" style="margin-top:8px">Each source merges into this one record (keyed by cas_id).
+     PDF/DOCX/TXT supported; the text is extracted and stored under its section.</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">Summary</h3>
+  <div class="summary">{{ summary.summary_text }}</div>
+</div>
+
+{% set resume = unified.sources.resume %}
+{% set sop = unified.sources.sop %}
+{% set lors = unified.sources.lors %}
+{% if resume or sop or lors %}
+<div class="card">
+  <h3 style="margin-top:0">Document analysis <span class="pill">local · no LLM</span></h3>
+  {% if resume %}
+    {% set ra = resume.analysis %}
+    <div class="kv" style="margin-bottom:8px">
+      <div><b>Resume</b> · {{ ra.word_count }} words{% if resume.page_range %} · packet pages {{ resume.page_range[0] }}–{{ resume.page_range[1] }}{% endif %}</div>
+      {% if ra.detected_areas %}<div style="margin-top:4px">Areas: {% for ar in ra.detected_areas %}<span class="chip s">{{ ar }}</span> {% endfor %}</div>{% endif %}
+      {% if ra.mentioned_skills %}<div style="margin-top:4px">Skills/tools: {% for sk in ra.mentioned_skills %}<span class="chip">{{ sk }}</span> {% endfor %}</div>{% endif %}
+      {% if ra.flags %}<div style="margin-top:4px">{% for f in ra.flags %}<span class="chip w">⚠ {{ f }}</span> {% endfor %}</div>{% endif %}
+    </div>
+  {% endif %}
+  {% if sop %}
+    {% set a = sop.analysis %}
+    <div class="kv" style="margin-bottom:8px">
+      <div><b>SOP</b> · {{ a.word_count }} words · {{ a.sentence_count }} sentences (avg {{ a.avg_sentence_words }} words)</div>
+      {% if a.detected_areas %}<div style="margin-top:4px">Research areas: {% for ar in a.detected_areas %}<span class="chip s">{{ ar }}</span> {% endfor %}</div>{% endif %}
+      {% if a.mentioned_skills %}<div style="margin-top:4px">Skills/tools: {% for sk in a.mentioned_skills %}<span class="chip">{{ sk }}</span> {% endfor %}</div>{% endif %}
+      {% if a.flags %}<div style="margin-top:4px">{% for f in a.flags %}<span class="chip w">⚠ {{ f }}</span> {% endfor %}</div>{% endif %}
+    </div>
+  {% endif %}
+  {% for lor in lors %}
+    <div class="kv" style="margin-bottom:8px">
+      <div><b>LOR</b>{% if lor.recommender %} — {{ lor.recommender }}{% endif %} · {{ lor.analysis.word_count }} words</div>
+      {% if lor.analysis.flags %}<div style="margin-top:4px">{% for f in lor.analysis.flags %}<span class="chip w">⚠ {{ f }}</span> {% endfor %}</div>{% endif %}
+    </div>
+  {% endfor %}
+  <p class="muted" style="margin-top:6px">Keyword detection &amp; structure only — not an interpretation of the writing. Documents never leave this machine.</p>
+</div>
+{% endif %}
+
+<div class="grid">
+  <div class="card">
+    <h3 style="margin-top:0">Education</h3>
+    {% for e in rec.education %}
+      <div class="kv" style="margin-bottom:10px">
+        <div><b>{{ e.college_name or 'Institution '+(e.index|string) }}</b></div>
+        <div class="muted">{{ [e.state, e.country]|select|join(', ') }}</div>
+        {% if e.gpa %}<div>GPA {{ e.gpa.raw }} /{{ e.gpa.scale|int }} → {{ e.gpa.normalized_4 }}/4.0</div>{% endif %}
+      </div>
+    {% else %}<p class="muted">No education on file.</p>{% endfor %}
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Test scores</h3>
+    {% set eng = rec.english_proficiency %}
+    {% if eng and eng.ielts %}
+      <div class="kv"><b>IELTS</b> best {{ eng.best_ielts_overall }}
+        ({{ eng.ielts|length }} attempt{{ 's' if eng.ielts|length>1 else '' }}:
+        {{ eng.ielts|map(attribute='overall_band')|join(', ') }})</div>
+    {% endif %}
+    {% if eng and eng.toefl %}
+      <div class="kv"><b>TOEFL iBT</b> best total {{ eng.best_toefl_total|int }}</div>
+    {% endif %}
+    {% if not eng %}<p class="muted">No IELTS or TOEFL on file.</p>{% endif %}
+    {% if rec.gre_results %}
+      <div class="kv"><b>GRE</b> {{ rec.gre_results|join(', ') }} (out of 340)</div>
+    {% else %}
+      <div class="kv muted">No GRE on file.</div>
+    {% endif %}
+
+    {% if rec.experience %}
+      <h3>Experience</h3>
+      {% for x in rec.experience %}
+        <div class="kv">{{ x.designation or '—' }}{% if x.local_status %} <span class="pill">{{ x.local_status }}</span>{% endif %}</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+{% if rec.programs %}
+<div class="card">
+  <h3 style="margin-top:0">Programs applied to</h3>
+  {% for p in rec.programs %}
+    <div class="kv" style="margin-bottom:8px">
+      <div><b>{{ p.name or p.label or 'Program '+(p.index|string) }}</b>{% if p.status %} <span class="pill">{{ p.status }}</span>{% endif %}</div>
+      {% if p.label and p.label != p.name %}<div class="muted">{{ p.label }}</div>{% endif %}
+      <div class="muted">{{ [p.department, p.level, p.start_term, p.start_year]|select|join(' · ') }}</div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if rec.meta.warnings %}
+<div class="card" style="border-color:#f3c9c4">
+  <h3 style="margin-top:0">Data to verify <span class="chip w">{{ rec.meta.warnings|length }}</span></h3>
+  <div class="chips">
+    {% for w in rec.meta.warnings %}<span class="chip w">⚠ {{ w }}</span>{% endfor %}
+  </div>
+  <p class="muted" style="margin-top:8px">Factual notes about missing or unclear fields — not a judgement of the applicant.</p>
+</div>
+{% endif %}
+
+{% endblock %}

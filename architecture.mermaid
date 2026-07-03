@@ -1,0 +1,56 @@
+%% Graduate Applicant Pipeline — Architecture (current)
+%% Fully local & deterministic. No LLM, no network, no scoring/ranking.
+%% One JSON record per student (keyed by cas_id) accumulates every source.
+
+flowchart TD
+    subgraph INPUT["1 · Inputs (local files)"]
+        CSV["Application CSV / Excel<br/>(.csv, .xlsx, .xls)"]
+        DOCS["Single documents<br/>SOP · LOR · Resume<br/>(PDF / DOCX / TXT)"]
+        PACKET["Combined 'Full Application' PDF<br/>and ZIP of many packets"]
+    end
+
+    subgraph APP["2 · Application path — deterministic"]
+        READ["Reader (pandas)<br/>CSV/Excel -> rows"]
+        GROUP["Indexed-column collapse<br/>name_0, name_1 -> arrays"]
+        MAP["Field mapper + identifier<br/>cas_id (else email) · drop protected attrs"]
+        GPA["GPA normalizer<br/>auto-detect scale -> /4.0"]
+        MODEL["Strong parser (Pydantic)<br/>coerce · range-check · forbid unknowns"]
+        QUAR["Quarantine<br/>invalid rows + reasons"]
+    end
+
+    subgraph DOC["3 · Document path — local, no LLM"]
+        XTR["Text extractor<br/>pypdf / pypdfium2 · python-docx<br/>OCR fallback (Tesseract) for scanned pages"]
+        SEG["Packet segmenter<br/>split combined PDF -> resume/SOP/LOR/scorecard<br/>keep resume/SOP/LOR · drop score cards"]
+        ANA["Analyzer<br/>research areas · skills ·<br/>length/quality flags · duplicate-SOP check"]
+    end
+
+    MERGE{{"Merge by cas_id"}}
+    RECON["Reconcile<br/>fold email/ROW-keyed record<br/>into matching cas_id record"]
+
+    STUDENT["★ Unified Student JSON ★<br/>identity + sources{application, resume, sop, lors[]}<br/>+ provenance + warnings"]
+    STORE[("SQLite store · data/students.db<br/>one atomic, lock-safe row per student")]
+
+    subgraph OUTPUT["4 · Output — deterministic summary"]
+        SUMM["Descriptive summary<br/>facts + detected areas/skills + data-to-verify"]
+        UI["Web UI (Flask)<br/>upload CSV · attach doc · upload ZIP · process · reset · download"]
+    end
+
+    CSV --> READ --> GROUP --> MAP --> GPA --> MODEL
+    MODEL -->|invalid| QUAR
+    MODEL -->|valid: application section| MERGE
+    DOCS --> XTR
+    PACKET --> XTR
+    XTR --> SEG --> ANA
+    XTR --> ANA
+    ANA -->|resume / sop / lor section| MERGE
+    MERGE --> RECON --> STUDENT --> STORE --> SUMM --> UI
+
+    classDef det fill:#e8f4ff,stroke:#2b7cd3,color:#13344f;
+    classDef boundary fill:#fff7cc,stroke:#d4a700,stroke-width:3px,color:#5c4a00;
+    classDef store fill:#eef7ee,stroke:#3a9d3a,color:#1f5d1f;
+    classDef merge fill:#f3eafc,stroke:#7c3aed,color:#3b1d6e;
+
+    class READ,GROUP,MAP,GPA,MODEL,QUAR,XTR,SEG,ANA,SUMM,UI det;
+    class STUDENT boundary;
+    class STORE,RECON store;
+    class MERGE merge;

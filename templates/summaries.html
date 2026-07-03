@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Summaries — Grad App{% endblock %}
+{% block body %}
+
+<p class="back"><a href="{{ url_for('index') }}">← All applicants</a>
+   &nbsp;·&nbsp; <a href="{{ url_for('download_summaries') }}">⬇ Download all summaries (.md)</a></p>
+
+{% if summaries %}
+<div class="card">
+  <h3 style="margin-top:0">Applicant summaries</h3>
+  <p class="muted">A factual summary for each applicant, listed alphabetically. Descriptive only —
+     no scoring or ranking.</p>
+</div>
+
+{% for s in summaries %}
+<div class="card">
+  <h3 style="margin:0">
+    <a href="{{ url_for('student', cas_id=s.cas_id) }}">{{ s.name }}</a>
+    <span class="muted" style="font-weight:400;font-size:13px">· {{ s.cas_id }}</span>
+    {% if s.warnings %}<span class="chip w" style="float:right">⚠ {{ s.warnings|length }} to verify</span>{% endif %}
+  </h3>
+  <div class="summary" style="margin-top:12px">{{ s.summary_text }}</div>
+</div>
+{% endfor %}
+{% else %}
+<div class="card"><p class="muted">No applicants yet. Upload a file on the home page first.</p></div>
+{% endif %}
+
+{% endblock %}

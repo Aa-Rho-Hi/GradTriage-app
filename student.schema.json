@@ -1,0 +1,672 @@
+{
+  "$defs": {
+    "EducationEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "college_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "College Name"
+        },
+        "country": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Country"
+        },
+        "state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "State"
+        },
+        "gpa": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GPA"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "index"
+      ],
+      "title": "EducationEntry",
+      "type": "object"
+    },
+    "EnglishProficiency": {
+      "additionalProperties": false,
+      "properties": {
+        "ielts": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/IELTSAttempt"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ielts"
+        },
+        "toefl": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/TOEFLAttempt"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Toefl"
+        },
+        "best_ielts_overall": {
+          "anyOf": [
+            {
+              "maximum": 9,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Best Ielts Overall"
+        },
+        "best_toefl_total": {
+          "anyOf": [
+            {
+              "maximum": 120,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Best Toefl Total"
+        }
+      },
+      "title": "EnglishProficiency",
+      "type": "object"
+    },
+    "ExperienceEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "designation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Designation"
+        },
+        "local_status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Local Status"
+        }
+      },
+      "required": [
+        "index"
+      ],
+      "title": "ExperienceEntry",
+      "type": "object"
+    },
+    "GPA": {
+      "additionalProperties": false,
+      "properties": {
+        "raw": {
+          "minimum": 0,
+          "title": "Raw",
+          "type": "number"
+        },
+        "scale": {
+          "title": "Scale",
+          "type": "number"
+        },
+        "normalized_4": {
+          "maximum": 4.0,
+          "minimum": 0,
+          "title": "Normalized 4",
+          "type": "number"
+        }
+      },
+      "required": [
+        "raw",
+        "scale",
+        "normalized_4"
+      ],
+      "title": "GPA",
+      "type": "object"
+    },
+    "IELTSAttempt": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "minimum": 0,
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "overall_band": {
+          "maximum": 9,
+          "minimum": 0,
+          "title": "Overall Band",
+          "type": "number"
+        }
+      },
+      "required": [
+        "attempt",
+        "overall_band"
+      ],
+      "title": "IELTSAttempt",
+      "type": "object"
+    },
+    "Interests": {
+      "additionalProperties": false,
+      "properties": {
+        "areas": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Areas"
+        },
+        "specialization": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Specialization"
+        }
+      },
+      "title": "Interests",
+      "type": "object"
+    },
+    "Meta": {
+      "additionalProperties": false,
+      "properties": {
+        "source_file": {
+          "title": "Source File",
+          "type": "string"
+        },
+        "source_row": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Row"
+        },
+        "ingested_at": {
+          "title": "Ingested At",
+          "type": "string"
+        },
+        "validation_status": {
+          "enum": [
+            "valid",
+            "valid_with_warnings"
+          ],
+          "title": "Validation Status",
+          "type": "string"
+        },
+        "warnings": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Warnings"
+        }
+      },
+      "required": [
+        "source_file",
+        "ingested_at",
+        "validation_status"
+      ],
+      "title": "Meta",
+      "type": "object"
+    },
+    "Personal": {
+      "additionalProperties": false,
+      "properties": {
+        "first_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "First Name"
+        },
+        "last_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Name"
+        },
+        "full_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Full Name"
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Email"
+        }
+      },
+      "title": "Personal",
+      "type": "object"
+    },
+    "ProgramEntry": {
+      "additionalProperties": false,
+      "description": "A program the applicant applied to (from the designation_* columns).",
+      "properties": {
+        "index": {
+          "minimum": 0,
+          "title": "Index",
+          "type": "integer"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Status"
+        },
+        "department": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Department"
+        },
+        "level": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Level"
+        },
+        "start_term": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Term"
+        },
+        "start_year": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start Year"
+        }
+      },
+      "required": [
+        "index"
+      ],
+      "title": "ProgramEntry",
+      "type": "object"
+    },
+    "TOEFLAttempt": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt": {
+          "minimum": 0,
+          "title": "Attempt",
+          "type": "integer"
+        },
+        "listening": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Listening"
+        },
+        "reading": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reading"
+        },
+        "speaking": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Speaking"
+        },
+        "writing": {
+          "anyOf": [
+            {
+              "maximum": 30,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Writing"
+        },
+        "total": {
+          "anyOf": [
+            {
+              "maximum": 120,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total"
+        }
+      },
+      "required": [
+        "attempt"
+      ],
+      "title": "TOEFLAttempt",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Strict, validated representation of a single applicant.",
+  "properties": {
+    "schema_version": {
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "cas_id": {
+      "minLength": 1,
+      "title": "Cas Id",
+      "type": "string"
+    },
+    "personal": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Personal"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "english_proficiency": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EnglishProficiency"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "gre_results": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Raw GRE result values as reported; semantics vary by source so these are stored loosely and NOT used for scoring.",
+      "title": "Gre Results"
+    },
+    "education": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/EducationEntry"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Education"
+    },
+    "experience": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ExperienceEntry"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Experience"
+    },
+    "programs": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ProgramEntry"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Programs"
+    },
+    "interests": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Interests"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "meta": {
+      "$ref": "#/$defs/Meta"
+    }
+  },
+  "required": [
+    "schema_version",
+    "cas_id",
+    "meta"
+  ],
+  "title": "StudentRecord",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "GENERATED from src/models.py \u2014 do not edit by hand."
+}

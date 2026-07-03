@@ -1,0 +1,43 @@
+# How raw CSV columns map to the canonical record.
+# Columns ending in _<n> are "indexed" and collapse into arrays at index n.
+# Edit here when the CSV layout changes — the parser reads this file.
+
+# Scalar (single-value) columns -> canonical path
+scalars:
+  cas_id: cas_id
+  first_name: personal.first_name
+  last_name: personal.last_name
+
+# Indexed column groups. `base` is the column name without the _<n> suffix.
+indexed_groups:
+  ielts:
+    overall_band: { base: ielts_overall_band_score, type: float }
+  toefl:
+    listening: { base: toefl_ibt_listening, type: float }
+    reading:   { base: toefl_ibt_reading,   type: float }
+    speaking:  { base: toefl_ibt_speaking,  type: float }
+    writing:   { base: toefl_ibt_writing,   type: float }
+    total:     { base: toefl_ibt_result,    type: float }
+  education:
+    college_name: { base: college_name,            type: str }
+    country:      { base: country_name_of_college, type: str }
+    state:        { base: college_state,           type: str }
+    gpa_raw:      { base: gpas_by_transcript_gpa,   type: float }
+  experience:
+    designation:  { base: designation,   type: str }
+    local_status: { base: local_status,  type: str }
+
+# Free-text custom-question columns -> interests. Matched by substring.
+custom_questions:
+  areas_match: "which_area"                 # -> interests.areas
+  specialization_match: "what_area_of_specialization"   # -> interests.specialization
+
+# GPA handling. If gpa_scale is null the scale is auto-detected per value.
+gpa:
+  gpa_scale: null            # set to 4.0 / 5.0 / 10.0 / 100.0 to force a scale
+  auto_detect_thresholds:    # value <= threshold -> that scale
+    - { max: 4.3,  scale: 4.0 }
+    - { max: 5.0,  scale: 5.0 }
+    - { max: 10.0, scale: 10.0 }
+    - { max: 20.0, scale: 20.0 }
+    - { max: 100.0, scale: 100.0 }

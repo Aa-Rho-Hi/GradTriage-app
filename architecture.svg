@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 1320" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#5a6573"/>
+    </marker>
+    <style>
+      .stage   { fill:#fbfcfe; stroke:#c7d0db; stroke-width:1.5; }
+      .stage-t { font-size:15px; font-weight:700; fill:#1f2a37; }
+      .box     { rx:9; stroke-width:1.5; }
+      .det     { fill:#e8f4ff; stroke:#2b7cd3; }
+      .doc     { fill:#f3eafc; stroke:#7c3aed; }
+      .now     { fill:#dff3e6; stroke:#2e9e57; }
+      .store   { fill:#eef7ee; stroke:#3a9d3a; }
+      .lbl     { font-size:12.5px; fill:#1f2a37; }
+      .lbl-s   { font-size:11px; fill:#52606d; }
+      .edge    { stroke:#5a6573; stroke-width:1.6; fill:none; marker-end:url(#arrow); }
+      .elbl    { font-size:10.5px; fill:#5a6573; }
+    </style>
+  </defs>
+
+  <text x="520" y="34" text-anchor="middle" font-size="22" font-weight="800" fill="#13233a">Graduate Applicant Pipeline — current</text>
+  <text x="520" y="56" text-anchor="middle" font-size="13" fill="#52606d">Fully local &amp; deterministic · no LLM · no network · no scoring — one JSON record per student, keyed by cas_id</text>
+
+  <!-- 1 INPUTS -->
+  <rect class="stage" x="40" y="78" width="960" height="104" rx="12"/>
+  <text class="stage-t" x="60" y="102">1 · Inputs (local files)</text>
+  <rect class="box now"  x="70"  y="114" width="280" height="56"/>
+  <text class="lbl" x="210" y="136" text-anchor="middle" font-weight="700">Application CSV / Excel</text>
+  <text class="lbl-s" x="210" y="155" text-anchor="middle">.csv · .xlsx · .xls</text>
+  <rect class="box doc"  x="380" y="114" width="280" height="56"/>
+  <text class="lbl" x="520" y="134" text-anchor="middle" font-weight="700">Single documents</text>
+  <text class="lbl-s" x="520" y="151" text-anchor="middle">SOP · LOR · Resume</text>
+  <text class="lbl-s" x="520" y="165" text-anchor="middle">PDF · DOCX · TXT</text>
+  <rect class="box doc"  x="690" y="114" width="280" height="56"/>
+  <text class="lbl" x="830" y="134" text-anchor="middle" font-weight="700">Combined packet</text>
+  <text class="lbl-s" x="830" y="151" text-anchor="middle">"Full Application" PDF</text>
+  <text class="lbl-s" x="830" y="165" text-anchor="middle">+ ZIP of many packets</text>
+
+  <!-- 2 APPLICATION PATH -->
+  <rect class="stage" x="40" y="206" width="470" height="300" rx="12"/>
+  <text class="stage-t" x="60" y="230">2 · Application path <tspan font-size="11" font-weight="400" fill="#2b7cd3">— deterministic</tspan></text>
+  <rect class="box det" x="120" y="244" width="310" height="40"/><text class="lbl-s" x="275" y="269" text-anchor="middle">Reader (pandas) — CSV/Excel → rows</text>
+  <rect class="box det" x="120" y="292" width="310" height="40"/><text class="lbl-s" x="275" y="317" text-anchor="middle">Indexed-column collapse → arrays</text>
+  <rect class="box det" x="120" y="340" width="310" height="44"/><text class="lbl-s" x="275" y="358" text-anchor="middle">Field map + identifier (cas_id/email)</text><text class="lbl-s" x="275" y="373" text-anchor="middle">drop protected attributes</text>
+  <rect class="box det" x="120" y="392" width="310" height="40"/><text class="lbl-s" x="275" y="417" text-anchor="middle">GPA normalizer → /4.0</text>
+  <rect class="box det" x="120" y="440" width="310" height="44"/><text class="lbl-s" x="275" y="458" text-anchor="middle">Strong parser (Pydantic)</text><text class="lbl-s" x="275" y="473" text-anchor="middle">coerce · range-check · forbid unknowns</text>
+  <path d="M275 284 V292" class="edge"/><path d="M275 332 V340" class="edge"/><path d="M275 384 V392" class="edge"/><path d="M275 432 V440" class="edge"/>
+
+  <!-- 3 DOCUMENT PATH -->
+  <rect class="stage" x="540" y="206" width="460" height="300" rx="12"/>
+  <text class="stage-t" x="560" y="230">3 · Document path <tspan font-size="11" font-weight="400" fill="#7c3aed">— local, no LLM</tspan></text>
+  <rect class="box doc" x="600" y="242" width="340" height="66"/>
+  <text class="lbl" x="770" y="263" text-anchor="middle" font-weight="700">Text extractor</text>
+  <text class="lbl-s" x="770" y="281" text-anchor="middle">pypdf / pypdfium2 · python-docx</text>
+  <text class="lbl-s" x="770" y="297" text-anchor="middle">OCR fallback (Tesseract) for scanned pages</text>
+  <rect class="box doc" x="600" y="324" width="340" height="64"/>
+  <text class="lbl" x="770" y="345" text-anchor="middle" font-weight="700">Packet segmenter</text>
+  <text class="lbl-s" x="770" y="363" text-anchor="middle">split combined PDF → resume/SOP/LOR</text>
+  <text class="lbl-s" x="770" y="379" text-anchor="middle">keep resume/SOP/LOR · drop score cards</text>
+  <rect class="box doc" x="600" y="404" width="340" height="86"/>
+  <text class="lbl" x="770" y="426" text-anchor="middle" font-weight="700">Analyzer (keyword/structure)</text>
+  <text class="lbl-s" x="770" y="444" text-anchor="middle">research areas · skills</text>
+  <text class="lbl-s" x="770" y="460" text-anchor="middle">length/quality flags</text>
+  <text class="lbl-s" x="770" y="476" text-anchor="middle">near-duplicate SOP check</text>
+  <path d="M770 308 V324" class="edge"/>
+  <path d="M770 388 V404" class="edge"/>
+  <!-- single-doc bypass of the segmenter -->
+  <path d="M940 286 H970 V450 H942" class="edge"/>
+  <text class="elbl" x="978" y="372" text-anchor="middle" transform="rotate(90 978 372)">single docs — skip segmenter</text>
+
+  <!-- merge -->
+  <polygon points="520,528 600,560 520,592 440,560" fill="#f3eafc" stroke="#7c3aed" stroke-width="2"/>
+  <text x="520" y="557" text-anchor="middle" font-size="12" font-weight="700" fill="#3b1d6e">Merge by</text>
+  <text x="520" y="573" text-anchor="middle" font-size="12" font-weight="700" fill="#3b1d6e">cas_id</text>
+
+  <!-- quarantine -->
+  <rect class="box" fill="#fbe9e7" stroke="#c0392b" x="120" y="520" width="200" height="40"/>
+  <text class="lbl-s" x="220" y="545" text-anchor="middle" fill="#7a1f16">Quarantine — invalid rows + reasons</text>
+
+  <path d="M275 484 V500 H410 V560 H440" class="edge"/><text class="elbl" x="352" y="514">valid → application</text>
+  <path d="M200 484 V520" class="edge"/><text class="elbl" x="150" y="508">invalid</text>
+  <path d="M770 490 V514 H660 V560 H600" class="edge"/><text class="elbl" x="612" y="538">resume / sop / lor section</text>
+
+  <!-- reconcile -->
+  <rect class="box store" x="408" y="612" width="224" height="40"/>
+  <text class="lbl-s" x="520" y="630" text-anchor="middle" font-weight="700">Reconcile</text>
+  <text class="lbl-s" x="520" y="645" text-anchor="middle">collapse duplicate keys (email ↔ cas_id)</text>
+  <path d="M520 592 V612" class="edge"/>
+
+  <!-- unified record -->
+  <rect x="290" y="672" width="460" height="82" rx="12" fill="#fff7cc" stroke="#d4a700" stroke-width="3"/>
+  <text x="520" y="700" text-anchor="middle" font-size="15" font-weight="800" fill="#5c4a00">★ Unified Student JSON ★</text>
+  <text x="520" y="721" text-anchor="middle" font-size="11.5" fill="#7a5c00">identity + sources{application, resume, sop, lors[]}</text>
+  <text x="520" y="738" text-anchor="middle" font-size="11.5" fill="#7a5c00">+ provenance + warnings</text>
+  <path d="M520 652 V672" class="edge"/>
+  <rect class="box store" x="772" y="686" width="206" height="58"/>
+  <text x="875" y="706" text-anchor="middle" font-size="12" font-weight="700" fill="#1f5d1f">SQLite store</text>
+  <text x="875" y="722" text-anchor="middle" font-size="11" fill="#1f5d1f">data/students.db</text>
+  <text x="875" y="737" text-anchor="middle" font-size="10" fill="#1f5d1f">one atomic row per student</text>
+  <path d="M750 715 H772" class="edge"/>
+
+  <!-- 4 OUTPUT -->
+  <rect class="stage" x="40" y="784" width="960" height="120" rx="12"/>
+  <text class="stage-t" x="60" y="808">4 · Output <tspan font-size="11" font-weight="400" fill="#2b7cd3">— deterministic summary</tspan></text>
+  <rect class="box det" x="150" y="824" width="320" height="60"/>
+  <text class="lbl" x="310" y="848" text-anchor="middle" font-weight="700">Descriptive summary</text>
+  <text class="lbl-s" x="310" y="866" text-anchor="middle">facts + detected areas/skills + data-to-verify</text>
+  <rect class="box det" x="540" y="824" width="380" height="60"/>
+  <text class="lbl" x="730" y="848" text-anchor="middle" font-weight="700">Web UI (Flask)</text>
+  <text class="lbl-s" x="730" y="866" text-anchor="middle">upload CSV · attach doc · upload ZIP · process · reset · download</text>
+  <path d="M520 754 V770 H310 V824" class="edge"/>
+  <path d="M470 854 H540" class="edge"/>
+
+  <!-- legend -->
+  <rect x="40" y="924" width="960" height="356" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="60" y="950" font-size="14" font-weight="700" fill="#1f2a37">Legend &amp; principles</text>
+  <rect class="box det"   x="60"  y="964" width="26" height="18"/><text class="lbl-s" x="96" y="977">Application / document step (deterministic, local)</text>
+  <rect class="box store" x="430" y="964" width="26" height="18"/><text class="lbl-s" x="466" y="977">Reconcile · SQLite store (atomic, lock-safe)</text>
+  <rect x="700" y="964" width="26" height="18" rx="5" fill="#fff7cc" stroke="#d4a700" stroke-width="2"/><text class="lbl-s" x="736" y="977">Unified student record</text>
+  <text x="60" y="1010" font-size="12" fill="#3b4754">1. Everything runs locally and deterministically — no LLM and no network calls anywhere in the pipeline.</text>
+  <text x="60" y="1030" font-size="12" fill="#3b4754">2. One record per student, keyed by cas_id. Application data, resume, SOP, and LOR(s) merge into the same record.</text>
+  <text x="60" y="1050" font-size="12" fill="#3b4754">3. Documents arrive singly, as one combined "Full Application" PDF, or as a ZIP of many packets; scanned pages are OCR'd.</text>
+  <text x="60" y="1070" font-size="12" fill="#3b4754">4. The packet segmenter keeps resume/SOP/LOR and drops score cards; reconcile folds email-keyed rows into the cas_id record.</text>
+  <text x="60" y="1090" font-size="12" fill="#3b4754">5. The app describes applicants — it does not score, rank, or judge them. Reviewers make the decision.</text>
+  <text x="60" y="1110" font-size="12" fill="#3b4754">6. Protected attributes (race, gender, age, citizenship) are never parsed; bad rows are quarantined with readable reasons.</text>
+  <text x="60" y="1130" font-size="12" fill="#3b4754">7. SOP/LOR analysis is keyword + structure only (areas, skills, length, duplicate check) — not interpretation.</text>
+  <text x="60" y="1158" font-size="12.5" font-weight="700" fill="#13233a">Modules</text>
+  <text x="60" y="1178" font-size="11.5" fill="#3b4754">parse.py · normalize.py · models.py / validate.py · merge.py · documents.py / analyze.py · ocr.py · packet.py · ingest_zip.py</text>
+  <text x="60" y="1196" font-size="11.5" fill="#3b4754">store.py (SQLite: atomic upsert · read-modify-write · reconcile) · template.py · run.py / add_document.py · app.py</text>
+  <text x="60" y="1222" font-size="12.5" font-weight="700" fill="#13233a">Config (editable, no code change)</text>
+  <text x="60" y="1242" font-size="11.5" fill="#3b4754">config/csv_field_map.yaml — column mapping + GPA scale · config/keywords.yaml — research areas, skills, section headers, thresholds</text>
+  <text x="60" y="1266" font-size="11.5" font-style="italic" fill="#7a828c">student.schema.json is generated from src/models.py (python -m scripts.gen_schema).</text>
+</svg>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Grad App{% endblock %}</title>
+  <style>
+    :root{
+      --bg:#f6f8fb; --card:#ffffff; --ink:#1f2a37; --muted:#5a6573;
+      --line:#e3e8ef; --accent:#2b6cb0;
+      --high:#2e9e57; --high-bg:#e7f6ed;
+      --mid:#c98a00; --mid-bg:#fdf3da;
+      --low:#c0392b; --low-bg:#fbe9e7;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Segoe UI,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+    a{color:var(--accent);text-decoration:none}
+    header{background:#13233a;color:#fff;padding:16px 28px}
+    header h1{margin:0;font-size:18px;font-weight:700}
+    header .sub{font-size:12px;color:#aebfd4}
+    .wrap{max-width:1080px;margin:24px auto;padding:0 20px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px}
+    .flash{background:#eef6ff;border:1px solid #bcd9f5;color:#13344f;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:14px}
+    .chips{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
+    .chip{font-size:12px;padding:4px 10px;border-radius:999px;background:#eef1f6;color:var(--muted)}
+    .chip.s{background:var(--high-bg);color:var(--high)}
+    .chip.w{background:var(--low-bg);color:var(--low)}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+    th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);cursor:pointer;user-select:none}
+    tr:hover td{background:#fafbfd}
+    .badge{display:inline-block;min-width:46px;text-align:center;font-weight:700;padding:3px 8px;border-radius:8px;font-size:13px}
+    .badge.high{background:var(--high-bg);color:var(--high)}
+    .badge.mid{background:var(--mid-bg);color:var(--mid)}
+    .badge.low{background:var(--low-bg);color:var(--low)}
+    .bar{height:8px;border-radius:6px;background:#eef1f6;overflow:hidden;min-width:120px}
+    .bar > i{display:block;height:100%;border-radius:6px}
+    .bar.high > i{background:var(--high)} .bar.mid > i{background:var(--mid)} .bar.low > i{background:var(--low)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .kv{font-size:14px;line-height:1.7}
+    .kv b{color:var(--muted);font-weight:600}
+    .muted{color:var(--muted);font-size:13px}
+    .file-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    input[type=file]{font-size:14px}
+    button{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer}
+    button:hover{background:#245a92}
+    .back{font-size:13px}
+    .dim{display:grid;grid-template-columns:160px 1fr 46px;gap:12px;align-items:center;margin:8px 0;font-size:13px}
+    .summary{white-space:pre-line;font-size:14px;line-height:1.6;background:#fbfcfe;border:1px solid var(--line);border-radius:10px;padding:14px}
+    .pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Grad App — Applicant Summaries</h1>
+    <div class="sub">Local &amp; deterministic · CSV/Excel + application packets → one record per student · no scoring, no LLM</div>
+  </header>
+  <div class="wrap">
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    {% block body %}{% endblock %}
+  </div>
+</body>
+</html>

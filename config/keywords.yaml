@@ -1,0 +1,64 @@
+# Keyword taxonomy for deterministic (no-LLM) SOP/LOR analysis.
+# Matching is case-insensitive and word-boundary aware: short/acronym/symbol
+# tokens (e.g. "soc", "git", "5g", "c++") must match as whole words, while
+# longer words and phrases also match simple plurals ("photonic" -> "photonics").
+# EDIT these lists for your department's areas and tooling.
+
+research_areas:
+  Power Systems:        ["power system", "power grid", "smart grid", "renewable", "transmission line", "power electronics", "energy system"]
+  Signal Processing:    ["signal processing", "dsp", "fourier", "filtering", "image processing", "speech processing"]
+  Control Systems:      ["control system", "feedback control", "controller", "state estimation", "dynamical system", "optimal control"]
+  Embedded Systems:     ["embedded system", "microcontroller", "firmware", "rtos", "fpga", "system on chip", "soc"]
+  VLSI / Microelectronics: ["vlsi", "semiconductor", "cmos", "microelectronics", "chip design", "fabrication", "asic"]
+  Communications:       ["wireless", "5g", "antenna", "modulation", "communication system", "networking", "mimo"]
+  Machine Learning / AI: ["machine learning", "deep learning", "neural network", "artificial intelligence", "computer vision", "reinforcement learning", "nlp"]
+  Robotics:             ["robotics", "autonomous", "slam", "manipulator", "motion planning", "robot"]
+  Photonics / Optics:   ["photonic", "optics", "laser", "optical", "fiber optic"]
+  Computer Architecture: ["computer architecture", "processor design", "gpu", "parallel computing", "hardware accelerator"]
+
+skills:
+  ["python", "matlab", "c++", "verilog", "vhdl", "fpga", "pcb", "cadence", "spice",
+   "tensorflow", "pytorch", "linux", "git", "altium", "ansys", "labview", "opencv",
+   "cuda", "embedded c", "system verilog"]
+
+thresholds:
+  sop_min_words: 150      # below -> "very short" flag
+  sop_max_words: 1500     # above -> "unusually long" flag
+  lor_min_words: 100
+  resume_min_words: 80
+  duplicate_similarity: 0.55   # SOP Jaccard >= this -> possible-reuse flag
+
+# Section-heading patterns used to split a combined "Full Application" PDF.
+# A page is treated as the start of a section if its (top) text contains any of
+# these phrases. Order doesn't matter; longest/most-specific wins on ties.
+# 'ignore' sections (score cards, the raw application form) are dropped.
+section_headers:
+  resume:      ["curriculum vitae", "resume", "résumé", "work experience", "professional experience", "education and experience"]
+  sop:         ["statement of purpose", "personal statement", "statement of intent", "research statement", "letter of intent"]
+  lor:         ["letter of recommendation", "recommendation letter", "letter of reference", "evaluator", "recommender"]
+  scorecard:   ["test of english", "ielts", "toefl", "gre general", "score report", "examinee score", "duolingo english test"]   # ignored
+  ignore:      ["academic history", "supporting information", "release statement", "application for admission",
+                "application summary", "graduate application", "applicant information", "documents"]   # form pages, dropped
+
+# Which segmented sections to keep and merge (others are ignored).
+keep_sections: ["resume", "sop", "lor"]
+
+# Real packets often have NO heading on the resume (it just starts with the
+# applicant's contact block) or the statement (just prose). These heuristics
+# recover them when no explicit heading matched.
+heuristics:
+  resume_by_contact: true     # a page with an email + phone/address near the top -> resume
+  sop_by_prose: true          # a long prose page that isn't form/resume/lor -> statement
+  sop_min_prose_words: 70
+
+# Content cues used to tell a statement (SOP) page apart from a recommendation
+# (LOR) page when neither has a clear heading — the SOP can appear AFTER the LOR.
+content_cues:
+  sop: ["statement of purpose", "my research", "my goal", "i hope to", "i would love",
+        "i am interested in", "master's program", "masters program", "i want to",
+        "my interest in", "research experience", "i plan to", "i aspire", "my motivation",
+        "pursue a master", "pursue a ph", "i intend to", "my course focus", "i am applying",
+        "my long-term", "in my last semester", "my undergraduate"]
+  lor: ["i recommend", "i have known", "the applicant", "the candidate", "highly recommend",
+        "in my class", "in my course", "it is my pleasure", "letter of reference",
+        "letter of recommendation", "likert", "i strongly recommend", "rank", "recommender"]

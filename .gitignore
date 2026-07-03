@@ -1,0 +1,20 @@
+# Applicant PII and derived data must never be committed. Everything under
+# data/ is either a raw upload (CSV/Excel/ZIP/PDF/DOCX with names, emails,
+# test scores, SOP/LOR text) or derived from one (the SQLite store, quarantine
+# entries, generated summaries).
+data/
+
+# Local secrets / env overrides for the Flask app (GRADAPP_SECRET_KEY,
+# GRADAPP_PASSWORD, etc.) — never commit these.
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.coverage.*
+
+# Editor/OS cruft
+.DS_Store
