@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List, Optional
 
 import yaml
 
@@ -92,23 +92,30 @@ def run(input_csv: str, outdir: str, field_map_path: str) -> Dict[str, Any]:
         valid_ids.add(sid)
 
     store.replace_quarantine(quarantine)
-    index = reindex(outdir)
+    index = reindex(outdir, changed=valid_ids)
 
     return {"rows": len(rows), "valid": len(valid_ids),
             "quarantined": len(quarantine), "students_total": len(index),
             "outdir": outdir}
 
 
-def reindex(outdir: str) -> List[dict]:
+def reindex(outdir: str, changed: Optional[Iterable[str]] = None) -> List[dict]:
     """Reconcile duplicates and rebuild reports/_summaries.md from the store.
-    Called after any source (CSV or document) is ingested."""
+    Called after any source (CSV or document) is ingested.
+
+    ``changed`` limits the expensive per-student document re-analysis to the
+    students an ingest actually touched — with hundreds of applicants on file,
+    re-analyzing everyone after every upload is what made ingest O(all
+    students). Pass None (e.g. after a code/template change) to refresh all.
+    """
     store = Store(db_path_for(outdir))
     store.reconcile()                                 # collapse same-person duplicates
 
-    # Re-render summaries from the current template. This keeps existing records
-    # current after summary logic changes, not only after a new ingest.
-    for u in store.all():
-        sid = u["student_id"]
+    # Re-render summaries from the current template — for the changed students
+    # only (or everyone when doing a full refresh).
+    ids = (list(changed) if changed is not None
+           else [u["student_id"] for u in store.all()])
+    for sid in ids:
 
         def _refresh(current):
             sources = current.get("sources") or {}

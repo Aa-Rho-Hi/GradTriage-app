@@ -45,6 +45,7 @@ def ingest_zip(zip_path: str, outdir: str) -> Dict[str, Any]:
         "score_sections": 0, "unmatched_files": [], "details": [],
         "scanned_docs": 0, "ocr_pages": 0, "ocr_unavailable_docs": 0,
     }
+    updated_ids: set = set()
 
     with zipfile.ZipFile(zip_path) as zf:
         members = [zi for zi in zf.infolist() if not zi.is_dir()]
@@ -151,6 +152,7 @@ def ingest_zip(zip_path: str, outdir: str) -> Dict[str, Any]:
                 return unified
 
             store.update(cas, _apply)        # atomic per-student merge
+            updated_ids.add(cas)
 
             if oi.get("ocr_used"):
                 report["scanned_docs"] += 1
@@ -164,7 +166,7 @@ def ingest_zip(zip_path: str, outdir: str) -> Dict[str, Any]:
                                       "pages": seg["page_count"],
                                       "ocr_pages": oi.get("ocr_used", 0)})
 
-    reindex(outdir)
+    reindex(outdir, changed=updated_ids)
     return report
 
 

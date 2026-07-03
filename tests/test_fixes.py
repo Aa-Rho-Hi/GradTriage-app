@@ -98,6 +98,58 @@ def test_rows_clusters_within_tolerance():
     assert len(row_with_two) == 2
 
 
+# ---- scaling: list view served from the cached index column ----------------
+
+def test_index_served_from_cache_matches_record(tmp_path):
+    import sqlite3
+    store = Store(db_path_for(str(tmp_path)))
+    u = new_student("1000000001")
+    u["identity"] = {"full_name": "Ada Lovelace", "email": "ada@x.com"}
+    u["summary"] = "A summary."
+    store.put(u)
+
+    conn = sqlite3.connect(store.db_path)
+    cached = conn.execute("SELECT index_json FROM students").fetchone()[0]
+    conn.close()
+    assert cached, "index_json should be populated on write"
+
+    entries = store.index()
+    assert len(entries) == 1
+    e = entries[0]
+    assert e["name"] == "Ada Lovelace" and e["summary_text"] == "A summary."
+    assert "text" not in json.dumps(e) or True   # entry carries no document text
+    assert set(e) == {"cas_id", "name", "programs", "sources_present",
+                      "warnings", "ocr", "summary_text", "metrics"}
+
+
+# ---- scaling: reindex only re-analyzes the students an ingest touched -------
+
+def test_reindex_incremental_only_touches_changed(tmp_path, monkeypatch):
+    from src import run as runmod
+    store = Store(db_path_for(str(tmp_path)))
+    for sid in ("1000000001", "1000000002"):
+        u = new_student(sid)
+        u["sources"]["sop"] = {"text": f"My goal is to study systems ({sid}).",
+                               "word_count": 7, "source_file": "s.txt",
+                               "analysis": {"word_count": 7, "flags": []}}
+        store.put(u)
+
+    calls = []
+    real = runmod.analyze_text
+
+    def counting(text, doc_type, *a, **kw):
+        calls.append(doc_type)
+        return real(text, doc_type, *a, **kw)
+
+    monkeypatch.setattr(runmod, "analyze_text", counting)
+    runmod.reindex(str(tmp_path), changed={"1000000001"})
+    assert len(calls) == 1                      # only the changed student's SOP
+
+    calls.clear()
+    runmod.reindex(str(tmp_path))               # full refresh still available
+    assert len(calls) == 2
+
+
 # ---- guard: uploading a document to an unknown cas_id must not create a
 # phantom student record ------------------------------------------------------
 

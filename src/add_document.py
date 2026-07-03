@@ -32,7 +32,7 @@ def main() -> None:
                          "file '<cas_id>_<type>.pdf'.")
     _, words = ingest_document(args.input, cas_id, args.type, args.outdir,
                                recommender=args.recommender)
-    reindex(args.outdir)
+    reindex(args.outdir, changed={cas_id})
     print(json.dumps({"cas_id": cas_id, "type": args.type, "words": words,
                       "outdir": args.outdir}, indent=2))
 

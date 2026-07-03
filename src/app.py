@@ -481,7 +481,7 @@ def upload_document():
         return redirect(url_for("index"))
     try:
         _, words = ingest_document(dest, cas_id, doc_type, DATA, recommender=recommender)
-        reindex(DATA)
+        reindex(DATA, changed={cas_id})
         flash(f"Added {doc_type} ({words} words) to {cas_id}.")
     except Exception as exc:
         app.logger.exception("Error reading document for %s in /upload_document", cas_id)

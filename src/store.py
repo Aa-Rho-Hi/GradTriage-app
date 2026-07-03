@@ -65,6 +65,7 @@ _DDL = (
     " cas_id TEXT PRIMARY KEY,"
     " record TEXT NOT NULL,"
     " name   TEXT,"
+    " index_json TEXT,"
     " updated_at TEXT)",
     "CREATE TABLE IF NOT EXISTS quarantine ("
     " id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -74,6 +75,25 @@ _DDL = (
     " raw TEXT,"
     " created_at TEXT)",
 )
+
+# Columns added after the first release; applied with ALTER TABLE so existing
+# databases upgrade in place (the error when the column already exists is
+# ignored). index_json caches the lightweight per-student list-view entry so
+# the UI never has to deserialize full records (with complete SOP/LOR text)
+# just to render the applicant list.
+_MIGRATIONS = (
+    "ALTER TABLE students ADD COLUMN index_json TEXT",
+)
+
+
+def _apply_ddl(conn: sqlite3.Connection) -> None:
+    for ddl in _DDL:
+        conn.execute(ddl)
+    for mig in _MIGRATIONS:
+        try:
+            conn.execute(mig)
+        except sqlite3.OperationalError:
+            pass   # column already exists
 
 
 class Store:
@@ -140,8 +160,7 @@ class Store:
         conn = self._open(nolock=True, path=path)
         try:
             conn.execute("PRAGMA journal_mode=OFF")
-            for ddl in _DDL:
-                conn.execute(ddl)
+            _apply_ddl(conn)
         finally:
             conn.close()
 
@@ -190,8 +209,7 @@ class Store:
             try:
                 conn.execute("PRAGMA journal_mode=WAL")
                 self._probe_txn(conn)
-                for ddl in _DDL:
-                    conn.execute(ddl)
+                _apply_ddl(conn)
                 return {"journal": "wal", "nolock": False, "path": self.db_path}
             except sqlite3.OperationalError:
                 pass
@@ -203,8 +221,7 @@ class Store:
             conn = self._open(nolock=False)
             try:
                 conn.execute("PRAGMA journal_mode=DELETE")
-                for ddl in _DDL:
-                    conn.execute(ddl)
+                _apply_ddl(conn)
                 return {"journal": "delete", "nolock": False, "path": self.db_path}
             finally:
                 conn.close()
@@ -295,14 +312,32 @@ class Store:
             return unified
 
     @staticmethod
+    def _index_entry(unified: Dict[str, Any]) -> Dict[str, Any]:
+        """The lightweight list-view entry for one student (no document text)."""
+        app = unified["sources"].get("application") or {}
+        return {
+            "cas_id": unified["student_id"],
+            "name": unified["identity"].get("full_name", unified["student_id"]),
+            "programs": [p.get("name") for p in app.get("programs", []) if p.get("name")],
+            "sources_present": sources_present(unified),
+            "warnings": unified.get("warnings", []),
+            "ocr": unified.get("ocr"),
+            "summary_text": unified.get("summary", ""),
+            "metrics": applicant_metrics(unified),
+        }
+
+    @staticmethod
     def _write(conn: sqlite3.Connection, unified: Dict[str, Any]) -> None:
         cas_id = unified["student_id"]
         name = (unified.get("identity") or {}).get("full_name") or cas_id
+        idx = json.dumps(Store._index_entry(unified), ensure_ascii=False)
         conn.execute(
-            "INSERT INTO students(cas_id, record, name, updated_at) VALUES(?,?,?,?) "
+            "INSERT INTO students(cas_id, record, name, index_json, updated_at) "
+            "VALUES(?,?,?,?,?) "
             "ON CONFLICT(cas_id) DO UPDATE SET "
-            " record=excluded.record, name=excluded.name, updated_at=excluded.updated_at",
-            (cas_id, json.dumps(unified, ensure_ascii=False), name, _now()))
+            " record=excluded.record, name=excluded.name,"
+            " index_json=excluded.index_json, updated_at=excluded.updated_at",
+            (cas_id, json.dumps(unified, ensure_ascii=False), name, idx, _now()))
 
     def delete(self, cas_id: str) -> None:
         with self._writing() as conn:
@@ -326,20 +361,25 @@ class Store:
             conn.close()
 
     def index(self) -> List[Dict[str, Any]]:
-        """The lightweight per-student index the UI/list view consumes."""
+        """The lightweight per-student index the UI/list view consumes.
+
+        Served from the cached index_json column, so listing hundreds of
+        applicants never deserializes full records (with complete SOP/LOR
+        text). Rows written before the cache existed fall back to computing
+        the entry from the full record."""
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                "SELECT record, index_json FROM students "
+                "ORDER BY name COLLATE NOCASE").fetchall()
+        finally:
+            conn.close()
         out: List[Dict[str, Any]] = []
-        for u in self.all():
-            app = u["sources"].get("application") or {}
-            out.append({
-                "cas_id": u["student_id"],
-                "name": u["identity"].get("full_name", u["student_id"]),
-                "programs": [p.get("name") for p in app.get("programs", []) if p.get("name")],
-                "sources_present": sources_present(u),
-                "warnings": u.get("warnings", []),
-                "ocr": u.get("ocr"),
-                "summary_text": u.get("summary", ""),
-                "metrics": applicant_metrics(u),
-            })
+        for r in rows:
+            if r["index_json"]:
+                out.append(json.loads(r["index_json"]))
+            else:   # pre-migration row: compute from the full record
+                out.append(self._index_entry(json.loads(r["record"])))
         return out
 
     def clear_students(self) -> int:
