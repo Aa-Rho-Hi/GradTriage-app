@@ -14,7 +14,9 @@ from src.run import run
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG = yaml.safe_load(open(os.path.join(ROOT, "config", "csv_field_map.yaml")))
 SCHEMA = os.path.join(ROOT, "student.schema.json")
-CSV = os.path.join(ROOT, "data", "raw", "sample_applications.csv")
+# Committed synthetic fixture (fake applicants) — data/ is gitignored, so tests
+# must never depend on anything under it or they break on a clean CI checkout.
+CSV = os.path.join(ROOT, "tests", "fixtures", "sample_applications.csv")
 
 
 def _rec(cas_id):

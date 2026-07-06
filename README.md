@@ -15,7 +15,7 @@ data and leaves the judgement to the reviewer.
 git clone <repo-url> grad-app && cd grad-app
 python -m venv .venv && source .venv/bin/activate            # optional but recommended
 pip install -r requirements.txt -c constraints.txt          # pinned, reproducible
-python -m src.run --input data/raw/sample_applications.csv   # CLI
+python -m src.run --input tests/fixtures/sample_applications.csv   # CLI (demo data)
 python -m src.app                                            # web UI at http://127.0.0.1:5000
 pytest -q                                                    # tests
 # records persist in data/students.db (SQLite); the report lands in data/reports/_summaries.md

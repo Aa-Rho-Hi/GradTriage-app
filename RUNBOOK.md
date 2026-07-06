@@ -69,7 +69,7 @@ pip install -r requirements.txt -r requirements-dev.txt -c constraints.txt
 ### CLI pipeline
 
 ```bash
-python -m src.run --input data/raw/sample_applications.csv   # CSV or .xlsx/.xls/.xlsm
+python -m src.run --input tests/fixtures/sample_applications.csv   # demo data; accepts CSV or .xlsx/.xls/.xlsm
 ```
 
 Records land in `data/students.db`; invalid rows in `data/quarantine/`; the combined report in `data/reports/_summaries.md`.
@@ -187,6 +187,7 @@ python -m scripts.gen_schema     # rewrites student.schema.json from the Pydanti
 | File | Contents |
 |---|---|
 | `test_pipeline.py` | Core pipeline suite: parsing (CSV/Excel edge cases), normalization, GPA scales, validation/quarantine, merge, packet segmentation (reportlab-generated PDFs), OCR path, storage. |
+| `fixtures/sample_applications.csv` | Committed synthetic demo applicants used by tests and the README quick-start. Tests must never read from `data/` (gitignored → absent on CI). |
 | `test_app_guardrails.py` | 24 security tests for the Flask UI: extension/magic-byte rejection, 413 cap, same-origin 403, CSRF, rate-limit 429, Basic Auth, audit log, error logging, purge, protected-attribute enforcement. |
 | `test_fixes.py` | Regression tests for specific fixed bugs. |
 
