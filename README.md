@@ -5,9 +5,15 @@ validated canonical JSON record, then produces a **factual descriptive summary**
 for each applicant. **No LLM, no scoring, no ranking** — the app summarizes the
 data and leaves the judgement to the reviewer.
 
-## Run
+> **New here?** [RUNBOOK.md](RUNBOOK.md) is the full operational guide: clone & setup,
+> architecture so far, technologies used, how to run and open everything, and a
+> file-by-file reference for the entire repo.
+
+## Clone & run
 
 ```bash
+git clone <repo-url> grad-app && cd grad-app
+python -m venv .venv && source .venv/bin/activate            # optional but recommended
 pip install -r requirements.txt -c constraints.txt          # pinned, reproducible
 python -m src.run --input data/raw/sample_applications.csv   # CLI
 python -m src.app                                            # web UI at http://127.0.0.1:5000
@@ -75,7 +81,8 @@ python -m src.ingest_zip   --input packets.zip                   # ZIP of combin
 Combined packets are split into resume/SOP/LOR sections automatically (score
 cards dropped), scanned pages are read with OCR (Tesseract, optional), and each
 section merges into the student's record by `cas_id`. See `ARCHITECTURE.md` and
-`architecture.svg` for the full picture.
+`architecture.svg` for the full picture, and `RUNBOOK.md` for per-file docs and
+troubleshooting.
 
 ## Security & privacy guardrails (web UI)
 
